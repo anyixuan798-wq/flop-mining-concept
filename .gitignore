@@ -1,0 +1,6 @@
+# never commit keys / screenshots
+keys.txt
+*.pem
+*.key
+shot_*.png
+*.log

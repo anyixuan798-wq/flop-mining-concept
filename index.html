@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Flop Network · 挖矿概念模拟器 (Mining Concept Simulator)</title>
+<meta name="description" content="基于 Flop Network 官方 Teaser 机制的交互式挖矿概念模拟器 — 真实 double-SHA-256 工作量证明演示。Non-official community concept demo.">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>">
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">⛏ FLOP<span class="logo-sub">MINER</span></div>
+    <div class="tagline">$FLOP is food for your AI agent — 挖矿概念交互模拟器 <span class="dim">· Mining Concept Live Demo</span></div>
+  </div>
+  <div class="chain-status">
+    <span class="dot"></span><span id="chainState">链:主网待启动</span>
+    <span class="pill">Testnet Q4 2026</span>
+    <span class="pill">Mainnet Q1 2027</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ==================== LEFT: MINER CONSOLE ==================== -->
+  <section class="console card">
+    <div class="card-head">
+      <h2>⚙ 矿工控制台 <span class="sub">Miner Console</span></h2>
+      <div id="minerLed" class="led off">● 离线</div>
+    </div>
+
+    <div class="controls">
+      <button id="btnMine" class="btn-mine">▶ 开始挖矿</button>
+      <div class="slider-row">
+        <label>难度 <b id="diffVal">5</b><span class="hint">目标前导零</span></label>
+        <input type="range" id="diffSlider" min="3" max="8" step="1" value="5">
+        <div class="slider-ticks" id="diffTicks"></div>
+      </div>
+      <div class="slider-row">
+        <label>算力单元 <b id="workersVal">2</b><span class="hint">并行 worker</span></label>
+        <input type="range" id="workersSlider" min="1" max="8" step="1" value="2">
+      </div>
+    </div>
+
+    <!-- live block header -->
+    <div class="blockview">
+      <div class="bv-title">区块模板 <span class="sub">Block Template</span> <span id="blockHeight" class="hnum">高度 #0</span></div>
+      <div class="fields">
+        <div class="frow"><span class="fname">version</span><span class="fhex" id="fVersion">00000001</span></div>
+        <div class="frow"><span class="fname">prev_hash</span><span class="fhex" id="fPrev"></span></div>
+        <div class="frow"><span class="fname">merkle_root</span><span class="fhex" id="fMerkle"></span></div>
+        <div class="frow"><span class="fname">time</span><span class="fhex" id="fTime"></span></div>
+        <div class="frow"><span class="fname">bits</span><span class="fhex" id="fBits"></span></div>
+        <div class="frow nonce-row"><span class="fname">nonce</span><span class="fhex glow" id="fNonce">0x00000000</span>
+          <span class="scan-tag" id="scanTag">▮▮▮ 扫描中</span></div>
+      </div>
+      <div class="target-line">目标 <span class="mono" id="targetShow"></span><span class="sub">(hash 需以该前缀开头)</span></div>
+      <div class="hash-line">候选 hash: <span class="mono hashstream" id="currentHash">—</span></div>
+      <div class="searchbar"><div class="searchfill" id="searchFill"></div></div>
+      <div class="searchstats">
+        <span>本块尝试 <b id="blockAttempts">0</b></span>
+        <span>实时算力 <b id="statHash">0 H/s</b></span>
+        <span>预计 <b id="etaTxt">—</b></span>
+      </div>
+    </div>
+
+    <div class="minerstats">
+      <div class="ms"><div class="msv" id="statBlocks">0</div><div class="msl">已出块</div></div>
+      <div class="ms"><div class="msv" id="statTotalTry">0</div><div class="msl">总尝试 hash</div></div>
+      <div class="ms"><div class="msv" id="statAvgTime">—</div><div class="msl">平均出块</div></div>
+      <div class="ms"><div class="msv" id="statBest">—</div><div class="msl">历史最低 nonce</div></div>
+    </div>
+  </section>
+
+  <!-- ==================== RIGHT: WALLET + ECONOMY ==================== -->
+  <section class="right-col">
+
+    <div class="wallet card">
+      <div class="card-head">
+        <h2>👛 矿工钱包 <span class="sub">Wallet</span></h2>
+        <span class="pill accent" id="eraPill">Era 0 · 96 FLOP/块</span>
+      </div>
+      <div class="balance"><span id="balance">0.00</span><span class="cur">$FLOP</span></div>
+      <div class="halving">
+        <div class="halv-label">距下次减半 <span class="sub" id="halvNote">(演示加速:25 块/周期)</span></div>
+        <div class="halv-bar"><div class="halv-fill" id="halvFill"></div></div>
+        <div class="halv-meta"><span id="halvCount">0</span>/25 块 · 下一 Era 奖励 <b id="nextReward">48</b> FLOP</div>
+      </div>
+      <div class="blocklist-head">已产出的区块 <span class="sub" id="blocklistHint">(双击可复验)</span></div>
+      <div class="blocklist" id="blockList">
+        <div class="empty">还没有区块 — 点击「开始挖矿」</div>
+      </div>
+    </div>
+
+    <div class="did card" id="didCard">
+      <div class="card-head">
+        <h2>📡 DID 链上广播 <span class="sub">Technocore</span></h2>
+        <span class="pill" id="didState">未连接</span>
+      </div>
+      <div class="did-row">
+        <input type="password" id="seedInput" placeholder="粘贴 32 字节 seed(hex,64 字符)— 仅存本浏览器" autocomplete="off" spellcheck="false">
+        <button id="btnConnect" class="btn-small">连接 DID</button>
+      </div>
+      <div class="did-detail" id="didDetail" hidden>
+        <div class="did-line"><span class="dk">did:key</span><span class="dv mono" id="didShow"></span></div>
+        <div class="did-line"><span class="dk">房间</span>
+          <select id="roomSel">
+            <option value="lobby" selected>lobby(公共,官方签到面)</option>
+            <option value="fp">fp 专属房间(需已存在,否则自动降级 lobby)</option>
+          </select>
+        </div>
+        <div class="did-line"><span class="dk">频率</span>
+          <select id="bcastEvery">
+            <option value="1">每 1 块</option>
+            <option value="5">每 5 块</option>
+            <option value="10" selected>每 10 块</option>
+            <option value="25">每 25 块</option>
+          </select>
+          <span class="hint">自动广播间隔</span>
+        </div>
+        <div class="did-line btns">
+          <button id="btnNow" class="btn-small accent">▶ 立即广播当前战报</button>
+          <button id="btnDisconnect" class="btn-small ghost">断开</button>
+        </div>
+        <div class="did-log" id="didLog"></div>
+      </div>
+      <p class="did-note">⚠ 私钥仅在本浏览器内签名,不经过任何服务器,仓库里也<b>没有</b>私钥。请使用专用测试身份(如 keys.txt 中任意一行 seed),勿用主钱包。广播内容可被任何人公开读取。</p>
+    </div>
+
+    <div class="tokenomics card">
+      <div class="card-head"><h2>📊 官方机制速览 <span class="sub">per Teaser v0.1</span></h2>
+        <a class="src" href="https://flop.finance/teaser/" target="_blank" rel="noopener">flop.finance/teaser ↗</a></div>
+      <div class="togrid">
+        <div class="titem"><div class="tk">区块奖励</div><div class="tv">96 $FLOP / 块</div></div>
+        <div class="titem"><div class="tk">出块时间</div><div class="tv">~1 秒</div></div>
+        <div class="titem"><div class="tk">减半周期</div><div class="tv">730 天 × 5,之后恒定</div></div>
+        <div class="titem"><div class="tk">矿工收入</div><div class="tv">出块奖励 + 85% 推理费</div></div>
+        <div class="titem"><div class="tk">创世空投 · 矿工</div><div class="tv">≤ 12 亿 $FLOP (7.0%)</div></div>
+        <div class="titem"><div class="tk">10 年供应 · 矿工</div><div class="tv">88 亿 $FLOP (51.2%)</div></div>
+        <div class="titem"><div class="tk">证明机制</div><div class="tv">PoUI 有用推理证明</div></div>
+        <div class="titem"><div class="tk">矿工质押</div><div class="tv">按算力比例,作弊全额罚没</div></div>
+      </div>
+      <p class="disclaimer">Flop 真网不是传统 PoW——矿工通过 GPU 执行<em>可验证的 AI 推理</em>并出块(四层验证:TEE 硬件证明 / TOPLOC 激活指纹 / 抽样重跑 / 质押罚没)。本模拟器用真实 double-SHA-256 工作量证明来直观演示「找块 → 奖励」的概念,供学习与娱乐。</p>
+    </div>
+
+    <div class="foot card">
+      <span>⛏ Flop 挖矿概念模拟器 · 社区概念演示(非官方),数据基于 <a href="https://flop.finance/teaser/" target="_blank" rel="noopener">Flop Network Teaser v0.1 (2026-08-26)</a></span>
+      <span class="dim">源码见本仓库 README · 一切 $FLOP 均为演示虚拟币,无真实价值</span>
+    </div>
+  </section>
+</main>
+
+<script src="js/sha256.js"></script>
+<script src="js/vendor/tweetnacl.min.js"></script>
+<script src="js/did.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
