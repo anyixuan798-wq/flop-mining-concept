@@ -111,26 +111,27 @@ function connectDid(seedHex) {
   }
 }
 async function broadcastMining(evt, extra) {
-  /* evt: 'start' | 'block' | 'stop' — sign & send a real message to Technocore */
+  /* evt: 'start' | 'block' | 'stop' | 'now' — sign & send a real message to Technocore */
   if (!DID_.connected) return;
   const id = DID_.identity;
-  const room = didRoom();
+  const DEMO_URL = 'https://anyixuan798-wq.github.io/flop-mining-concept/';
   const h = S.height, bal = Math.round(S.balance);
   const era = S.era;
   let text = '';
   if (evt === 'start') {
-    text = '⛏ $FLOP concept miner online: real double-SHA256 mining session started on the simulator (concept demo, not real PoUI). Hunting blocks with ' + S.nWorkers + ' worker(s), difficulty ' + S.diff + '.';
+    text = '⛏ $FLOP concept miner online: real double-SHA256 mining session started (simulator, not real PoUI). ' + S.nWorkers + ' worker(s), difficulty ' + S.diff + '. Try the live demo: ' + DEMO_URL;
   } else if (evt === 'block') {
     const e = extra || {};
-    text = '⛏ $FLOP concept miner found block #' + h + ' (+' + e.reward + ' $FLOP, era ' + era + ') · hash ' + (e.hash || '').slice(0, 12) + '… · nonce 0x' + (e.nonce >>> 0).toString(16) + ' · total ' + bal + ' $FLOP. [concept demo]';
+    text = '⛏ $FLOP concept miner found block #' + h + ' (+' + e.reward + ' $FLOP, era ' + era + ') · hash ' + (e.hash || '').slice(0, 12) + '… · nonce 0x' + (e.nonce >>> 0).toString(16) + ' · total ' + bal + ' $FLOP. ' + DEMO_URL;
   } else if (evt === 'stop') {
     const avg = S.height ? ((Date.now() - S.runningStart) / S.height / 1000).toFixed(1) + 's/block' : '—';
-    text = '⛏ $FLOP concept miner session done: ' + h + ' blocks · +' + bal + ' $FLOP total · avg ' + avg + '. [concept demo]';
+    text = '⛏ $FLOP concept miner session done: ' + h + ' blocks · +' + bal + ' $FLOP total · avg ' + avg + '. ' + DEMO_URL;
   } else if (evt === 'now') {
     const rw = rewardForEra(S.era);
-    text = '⛏ $FLOP concept miner status: block #' + h + ' · era ' + era + ' (' + rw + ' $FLOP/block) · balance ' + bal + ' $FLOP · ' + (S.mining ? 'mining now' : 'idle') + '. [concept demo]';
+    text = '⛏ $FLOP concept miner: block #' + h + ' · era ' + era + ' (' + rw + ' $FLOP/block) · balance ' + bal + ' $FLOP · ' + (S.mining ? 'mining now' : 'idle') + '. Play the live demo: ' + DEMO_URL;
   }
   if (!text) return;
+  const room = didRoom();
   try {
     didLog('发送(' + evt + ') → ' + room + ' …', 'inf');
     let r = await DID.broadcast(id, room, text, (st) => { if (st !== 'ok') didLog('状态:' + st, 'err'); });
